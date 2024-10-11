@@ -3,9 +3,15 @@ a python library for examining (with your eyes and ears) large sound datasets wi
 
 ## setup
 ```bash
-git clone https://github.com/hugofloresgarcia/soundmaterial
+git clone  https://github.com/hugofloresgarcia/soundmaterial
 cd soundmaterial
+git submodule update --init --recursive
 pip install -e .
+```
+
+install audiotools
+```bash
+pip install -e lib/audiotools
 ```
 
 ## doing things
@@ -18,6 +24,11 @@ python -m soundmaterial.create ./sm.db
 add a folder of sounds to the database
 ```bash
 python -m soundmaterial.add ./sm.db /path/to/sounds
+```
+
+listen to sounds and search by filename
+```bash
+python -m soundmaterial.listen ./sm.db
 ```
 
 look at the dataset in a web browser

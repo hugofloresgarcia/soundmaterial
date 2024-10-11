@@ -3,7 +3,8 @@ name = "soundmaterial"
 version = "0.0.1"
 dependencies = [
     "pandas",
-    "argbind"
+    "argbind",
+    "gradio"
 ]
 requires-python = ">=3.8"
 authors = []

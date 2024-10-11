@@ -10,15 +10,15 @@ def connect(db_file: str) -> sqlite3.Connection:
     """
     connect to the database.
     """
-    print(f"connecting to database at {db_file}")
+    # print(f"connecting to database at {db_file}")
     conn = sqlite3.connect(db_file)
 
     # print all the tables in the database
-    print(f"loaded database from {db_file}")
+    # print(f"loaded database from {db_file}")
     cur = conn.cursor()
     cur.execute("SELECT name FROM sqlite_master WHERE type='table';")
-    print("tables in the database:")
-    print(cur.fetchall())
+    # print("tables in the database:")
+    # print(cur.fetchall())
 
     return conn
 
