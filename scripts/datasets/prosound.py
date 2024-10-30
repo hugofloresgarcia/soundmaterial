@@ -3,7 +3,7 @@ from soundmaterial.create import create_db
 from soundmaterial.add import add_dataset
 from soundmaterial.subset import create_subset
 
-path_to_prosound = "/media/pancho/prosound_core_complete/Anns Animals"
+path_to_prosound = "/media/pancho/prosound_core_complete/"
 db_path = "prosound.db"
 dataset_name = "prosound"
 
