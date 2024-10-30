@@ -161,6 +161,8 @@ cython_debug/
 #.idea/
 
 
-sm.db
+*.db
 
 .DS_Store
+.gradio/
+data/

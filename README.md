@@ -2,21 +2,33 @@
 a python library for examining (with your eyes and ears) large sound datasets with a playful curiosity 
 
 ## setup
+first, install audiotools
 ```bash
-git clone  https://github.com/hugofloresgarcia/soundmaterial
-cd soundmaterial
-git submodule update --init --recursive
+git clone  https://github.com/hugofloresgarcia/audiotools.git
+cd audiotools
 pip install -e .
 ```
 
-install audiotools
+now, we can install soundmaterial
 ```bash
-pip install -e lib/audiotools
+git clone  https://github.com/hugofloresgarcia/soundmaterial
+cd soundmaterial
+pip install -e .
 ```
 
-## doing things
+## the prosound dataset
+there is a script for processing the audio and captions in the IAL's prosound dataset. 
+you can run it with the following command.
 
-create a new database
+```bash
+python scripts/datasets/prosound.py
+```
+
+you may have to modify the paths in the script to point to the correct locations of the prosound dataset on your machine.
+
+## usage
+
+create a new database called `sm.db`
 ```bash
 python -m soundmaterial.create ./sm.db
 ```
@@ -26,12 +38,17 @@ add a folder of sounds to the database
 python -m soundmaterial.add ./sm.db /path/to/sounds
 ```
 
-listen to sounds and search by filename
+open a web interface and search for sounds by filename
 ```bash
 python -m soundmaterial.listen ./sm.db
 ```
 
-look at the dataset in a web browser
+create a subset (copy) of the audio files with an SQL query (use `--symlinks` to create symlinks instead of copying files)
+```bash
+python -m soundmaterial.subset ./sm.db "SELECT * FROM audio_file WHERE duration < 300" --output_folder data/subset --symlinks
+```
+
+examine and edit the dataset tables in a web browser
 ```
 pip install sqlite-web
 sqlite_web ./sm.db

@@ -1,0 +1,11 @@
+[ ] add a script to analyze the dataset as a whole and make histogram plots of duration etc
+[ ] add a pytorch dataset -- dataloader combo where you can specify which rows we want and load the audio fast!
+[ ] start training models
+[ ] partition -- split stuff into training and testing datasets. 
+[ ] audio tagging? 
+
+[ ] can we find a group of at least 2 days of sounds that are uniform enough to train a rave model successfully on?
+
+[ ] we could really  
+
+[ ] fix flac processing
