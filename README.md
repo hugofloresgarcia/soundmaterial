@@ -16,17 +16,11 @@ cd soundmaterial
 pip install -e .
 ```
 
-## the prosound dataset
-there is a script for processing the audio and captions in the IAL's prosound dataset. 
-you can run it with the following command.
+## usage 
 
-```bash
-python scripts/datasets/prosound.py
-```
+see `scripts/example.py` for an example. 
 
-you may have to modify the paths in the script to point to the correct locations of the prosound dataset on your machine.
-
-## usage
+## cli
 
 create a new database called `sm.db`
 ```bash
@@ -53,3 +47,15 @@ examine and edit the dataset tables in a web browser
 pip install sqlite-web
 sqlite_web ./sm.db
 ```
+
+
+## the prosound dataset
+there is a script for processing the audio and captions in the IAL's prosound dataset. 
+you can run it with the following command.
+
+```bash
+python scripts/datasets/prosound.py
+```
+
+you may have to modify the paths in the script to point to the correct locations of the prosound dataset on your machine.
+
