@@ -18,7 +18,18 @@ pip install -e .
 
 ## usage 
 
+### usage example
 see `scripts/example.py` for an example. 
+
+### visualize CLAP embeddings
+visualize CLAP embeddings on a dataset. 
+see `scripts/embed.py`
+
+**note**: you'll need to install some extra dependencies: 
+```
+pip install msclap --no-deps
+pip install plotly transformers umap-learn scikit-learn torchlibrosa 
+```
 
 ## cli
 

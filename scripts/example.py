@@ -2,12 +2,19 @@ import os
 from pathlib import Path
 import shutil
 
+import seaborn as sns
+import matplotlib.pyplot as plt
+
 import pandas as pd
 import soundmaterial as sm
 
-db_path = "sm.db"
+# the path to our database
+db_path = "/media/pancho/sm.db"
+
+# connect to our database
 conn = sm.connect(db_path)
 
+# find all the wav files
 query = "SELECT * FROM audio_file WHERE format = 'wav'"
 
 # Create a subset of the database
@@ -23,9 +30,6 @@ total_duration = subset['duration'].sum()
 print(f"Total duration: {total_duration} seconds")
 print(f"hours: {total_duration / 3600}")
 
-import seaborn as sns
-import matplotlib.pyplot as plt
-
 # what are the quartiles of the duration?
 print(subset['duration'].describe())
 
@@ -38,7 +42,11 @@ print(f"Under 5 seconds: {len(subset[subset['duration'] < 5])}")
 # how many under 1 second? 
 print(f'Under 1 second: {len(subset[subset["duration"] < 1])}')
 
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# vizualization
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # what's the relationship between duration and folder? 
+
 sns.boxplot(x='folder', y='duration', data=subset)
 plt.savefig("duration_vs_folder.png")
 

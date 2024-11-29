@@ -121,7 +121,7 @@ def add_dataset(
     dataset_name: str,
 ): 
     # we will use multiprocessing to speed up the process
-    pool = multiprocessing.Pool()
+    pool = multiprocessing.Pool(processes=8)
 
     # connect to the database
     conn = sm.connect(db_file)
@@ -158,6 +158,7 @@ def add_dataset(
     pbar.close()
 
     conn.commit()
+    conn.close()
 
 
 if __name__ == "__main__":

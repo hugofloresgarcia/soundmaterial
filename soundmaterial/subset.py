@@ -4,11 +4,13 @@ import shutil
 
 import pandas as pd
 import soundmaterial as sm
+import argbind
+
 
 def create_subset(
     db_path: str,
-    output_folder: str,
     query: str,
+    output_folder: str,
     symlinks: bool = False
 ) -> str:
     """ create a subset of a dataset by copying or symlinking the audio files to a new folder. 
@@ -27,6 +29,8 @@ def create_subset(
     """
     conn = sm.connect(db_path)
 
+    dataset_tbl = pd.read_sql_query("SELECT * FROM dataset", conn)
+
     # Create a subset of the database
     subset = pd.read_sql_query(query, conn)
     print(f"Creating a subset of {len(subset)} rows")
@@ -41,12 +45,16 @@ def create_subset(
 
     # copy all the audio files to the output folder
     for i, row in subset.iterrows():
-        audio_file = row['path']
-        outfile = os.path.join(output_folder, os.path.basename(audio_file))
+        root = dataset_tbl[dataset_tbl['id'] == row['dataset_id']]['root'].values[0]
+        audio_file =  Path(row['path'])
+        outfile = Path(output_folder) / Path(row['path']).relative_to(root)
+
         if os.path.exists(outfile):
             continue
 
+        outfile.parent.mkdir(parents=True, exist_ok=True)
         if symlinks:
+            # print(f"Creating symlink: {audio_file} -> {outfile}")
             os.symlink(audio_file, outfile)
         else:
             shutil.copy(audio_file, outfile)
@@ -68,18 +76,11 @@ def create_subset(
         
 
 if __name__ == "__main__":
+    create_subset = argbind.bind(create_subset, without_prefix=True, positional=True)
 
-    # search for all audio files with the word 'animal' in the description
-    # query = "SELECT * FROM audio_file WHERE path LIKE '%insect%'"
-    # query = query + " OR path LIKE '%bird%'"
-    # query = query + " OR path LIKE '%growl%'"
-    query = "SELECT * FROM audio_file WHERE path LIKE '%Pianos - Prepared%'"
+    args = argbind.parse_args()
 
-    create_subset(
-        db_path="/home/hugo/soundmaterial/sm.db",
-        output_folder="/home/hugo/rave/data/subset-prep-piano",
-        query=query,
-        symlinks=True
-    )
+    with argbind.scope(args):
+        create_subset()
 
     

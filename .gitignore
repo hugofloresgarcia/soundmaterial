@@ -162,6 +162,7 @@ cython_debug/
 
 
 *.db
+*.db-journal
 
 .DS_Store
 .gradio/
