@@ -33,8 +33,9 @@ def smart_plotly_export(fig, save_path):
 def dim_reduce(
         emb: np.ndarray, 
         labels: List[str], 
-        save_path: str, 
-        n_components: int =3, 
+        metadata=List[dict], 
+        save_path: str = "plot.html", 
+        n_components: int =3,
         method: str ='tsne', 
         title: str=''
     ):
@@ -74,8 +75,12 @@ def dim_reduce(
             y=proj[:, 1],
             instrument=labels
         ))
+        # add metadata
+        for key in metadata[0].keys():
+            df[key] = [m[key] for m in metadata]
+
         fig = px.scatter(df, x='x', y='y', color='instrument',
-                        title=title+f"_{method}")
+                        title=title+f"_{method}", hover_data=[key for key in metadata[0].keys()])
 
     elif n_components == 3:
         df = pd.DataFrame(dict(
@@ -84,9 +89,13 @@ def dim_reduce(
             z=proj[:, 2],
             instrument=labels
         ))
+        # add metadata
+        for key in metadata[0].keys():
+            df[key] = [m[key] for m in metadata]
+
         fig = px.scatter_3d(df, x='x', y='y', z='z',
                         color='instrument',
-                        title=title)
+                        title=title, hover_data=[key for key in metadata[0].keys()])
     else:
         raise ValueError("cant plot more than 3 components")
 

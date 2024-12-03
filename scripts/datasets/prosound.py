@@ -31,6 +31,12 @@ print(f"found {len(subfolders)} subfolders")
 for i, subfolder in enumerate(subfolders):
     print(f"adding {subfolder} to the database as {Path(subfolder).stem}")
     try:
+        # check if we already have this dataset in the database
+        # if we do, skip it
+        dataset_tbl = pd.read_sql_query("SELECT * FROM dataset", sm.connect(db_path))
+        if Path(subfolder).stem in dataset_tbl["name"].values:
+            print(f"skipping {subfolder}")
+            continue
         add_dataset(
             db_path, 
             str(subfolder), 
@@ -45,30 +51,9 @@ from soundmaterial.core import Caption, insert_caption
 conn = sm.connect(db_path)
 
 def filename2caption(path: str):
-    # find the matching subfolder for this filename
-    try:
-        subfolder = [p for p in subfolders if p in path][0]
-    except:
-        print(f"failed to find subfolder for {path}. No caption!")
-        return ""
-
-    subfolder = str(subfolder)
-
-    # remove the subfolder from the path
-    path = path.replace(subfolder, "")
-
-    # remove the file extension
-    path = path.split(".")[0]
-
-    # add back the spaces instead of underscores
-    path = path.replace("_", " ")
-
-    # grab the parts of the path
-    parts = path.split("/")
-
-    # join by comma
-    caption = ", ".join(parts)
-
+    caption = Path(path).stem
+    # remove underscores
+    caption = caption.replace("_", " ")
     return caption
 
 # go through all the filenames, and insert a caption
