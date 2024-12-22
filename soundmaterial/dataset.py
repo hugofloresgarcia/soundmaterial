@@ -2,11 +2,10 @@ import random
 
 import torch
 import numpy as np
-import audiotools as at
-from audiotools import AudioSignal
 import pandas as pd
 
 import soundmaterial as sm
+import vampnet.signal as sn
 
 class Dataset(torch.utils.data.Dataset):
     def __init__(self, 
@@ -47,62 +46,57 @@ class Dataset(torch.utils.data.Dataset):
         t0 = time.time()
         row = self.df.iloc[idx % len(self.df)]
         # check if the duration is in the row
+        state = sn.random_state(idx)
         if "duration" in row:
             total_duration = row["duration"]
             duration = self.n_samples / self.sample_rate
             # sample a random offset 
-            state = at.util.random_state(idx)
             lower_bound = 0 
             upper_bound = max(total_duration - duration, 0)
             offset = state.uniform(lower_bound, upper_bound)
-            sig = AudioSignal(
+            sig = sn.read_from_file(
                 row[self.audio_key], 
                 duration=duration, 
                 offset=offset,
-                sample_rate=self.sample_rate
             )
-            sig.metadata["load_time"] = time.time() - t0
+            sig = sn.resample(sig, self.sample_rate)
         else:
-            sig = AudioSignal.excerpt(
+            sig = sn.excerpt(
                 row[self.audio_key], 
                 duration=self.n_samples/self.sample_rate, 
-                sample_rate=self.sample_rate
+                sample_rate=self.sample_rate, 
+                state=sn.random_state(idx)
             )
-        sig = sig.resample(self.sample_rate)
         # pad up to the desired duration
-        # if sig.duration < self.duration:
-        #     num_pad = int((self.duration - sig.duration) * self.sample_rate)
-        #     sig.samples = torch.nn.functional.pad(sig.samples, (0, num_pad), mode="reflect")
-        if sig.length < self.n_samples:
-            num_pad = self.n_samples - sig.length
-            sig.samples = torch.nn.functional.pad(sig.samples, (0, num_pad))
+        if sig.num_samples < self.n_samples:
+            num_pad = self.n_samples - sig.num_samples
+            sig.wav = torch.nn.functional.pad(sig.wav, (0, num_pad))
 
         if self.num_channels == 1:
-            sig = sig.to_mono()
+            sig = sn.to_mono(sig)
         elif self.num_channels == 2:
             if sig.num_channels == 1:
-                sig.samples = torch.cat([sig.samples, sig.samples], dim=1)
+                sig.wav = torch.cat([sig.wav, sig.wav], dim=1)
             elif sig.num_channels == 2:
                 pass
             elif sig.num_channels > 2:
-                sig.samples = sig.samples[:, :2]
+                sig.wav = sig.wav[:, :2]
         else:
             raise ValueError(f"Invalid number of channels: {self.num_channels}")
 
-        out = {"wav": sig.samples[0], "sample_rate": sig.sample_rate}
-        out["signal"] = sig
-        if self.transform is not None:
-            out["transform_args"] = self.transform.instantiate(state, signal=sig)
-
+        if self.transform:
+            sig = self.transform(sig)
+    
+        out = {"sig": sig }
         for key in self.aux_keys:
             out[key] = row[key]
-        
-        # print(f"{idx} took: {time.time() - t0}")
+
+
         return out
 
     @staticmethod
     def collate(batch):
-        return at.util.collate(batch)
+        return sn.collate(batch)
 
 def train_test_split(df, test_size=0.1, seed=42):
     np.random.seed(seed)
