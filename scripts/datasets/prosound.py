@@ -7,13 +7,8 @@ from soundmaterial.create import create_db
 from soundmaterial.add import add_dataset
 from soundmaterial.subset import create_subset
 
-# path_to_prosound = Path("/media/pancho/prosound_core_complete/Clack")
-# db_path = "clack.db"
-# dataset_name = "clack"
-
 path_to_prosound = Path("/media/pancho/prosound_core_complete/")
-db_path = "prosound.db"
-dataset_name = "prosound"
+db_path = "/media/pancho/sm.db"
 
 # create a database
 create_db(db_path)
@@ -22,9 +17,6 @@ create_db(db_path)
 subfolders = [
     p for p in path_to_prosound.iterdir() if p.is_dir()
 ]
-# subfolders = ["/media/pancho/prosound_core_complete/Clack"]
-
-# subfolders = ["/media/pancho/prosound_core_complete/Urban Elements"]
 print(f"found {len(subfolders)} subfolders")
 
 # add the subfolders to the database

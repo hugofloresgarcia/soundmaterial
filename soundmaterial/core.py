@@ -23,6 +23,18 @@ def connect(db_file: str) -> sqlite3.Connection:
     return conn
 
 
+# ~~~~ execute a query and get the result as a dataframe
+def df_query(conn, query: str) -> pd.DataFrame:
+    return pd.read_sql_query(query, conn)
+
+# ~~~~ df: get the audio file table w/ the dataset table ~~~~
+def df_audio_file(conn) -> pd.DataFrame:
+    return df_query(conn, "SELECT * FROM audio_file JOIN dataset ON audio_file.dataset_id = dataset.id")
+
+# ~~~~ df: get the chunk table w/ the audio_file and dataset table ~~~~
+def df_chunk(conn) -> pd.DataFrame:
+    return df_query(conn, "SELECT * FROM chunk as chunk JOIN audio_file as af ON chunk.audio_file_id = af.id JOIN dataset ON af.dataset_id = dataset.id")
+
 # ~~~~~~~~~~~~~~~~
 # ~~~~ tables ~~~~
 # ~~~~~~~~~~~~~~~~
@@ -160,14 +172,23 @@ def get_audio_file_table(cur, dataset_id: int) -> pd.DataFrame:
     """).df()
 
 def audio_file_exists(cur, path: str, dataset_id: int) -> bool:
-    return cur.execute(f"""
+    # return cur.execute(f"""
+    #     SELECT EXISTS(
+    #         SELECT 1
+    #         FROM audio_file
+    #         WHERE path = '{path}'
+    #         AND dataset_id = {dataset_id}
+    #     )
+    # """).fetchone()[0]
+    return cur.execute("""
         SELECT EXISTS(
             SELECT 1
             FROM audio_file
-            WHERE path = '{path}'
-            AND dataset_id = {dataset_id}
+            WHERE path = ?
+            AND dataset_id = ?
         )
-    """).fetchone()[0]
+    """, (path, dataset_id)).fetchone()[0]
+
 
 
 # ~~~~ control signal ~~~~
@@ -280,13 +301,52 @@ def insert_caption(cur, caption: Caption):
     )
 
 
+@dataclass
+class Chunk:
+    audio_file_id: int
+    offset: float
+    duration: float
+
+def create_chunk_table(cur):
+    cur.execute(
+        """
+        CREATE TABLE chunk (
+            id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+            audio_file_id INTEGER NOT NULL,
+            offset REAL NOT NULL,
+            duration REAL NOT NULL,
+            FOREIGN KEY (audio_file_id) REFERENCES audio_file(id),
+            UNIQUE (audio_file_id, offset)
+        )
+        """
+    )
+
+def insert_chunk(cur, chunk: Chunk):
+    cur.execute(
+        f"""
+        INSERT INTO chunk ( audio_file_id, offset, duration ) 
+        VALUES ({chunk.audio_file_id}, {chunk.offset}, {chunk.duration})
+        """
+    )
+
+def chunk_exists(cur, audio_file_id: int, offset: float) -> bool:
+    return cur.execute(f"""
+        SELECT EXISTS(
+            SELECT 1
+            FROM chunk
+            WHERE audio_file_id = {audio_file_id}
+            AND offset = {offset}
+        )
+    """).fetchone()[0]
+
 def init(cursor: sqlite3.Cursor):
     for fn in [
         create_dataset_table,
         create_audio_file_table,
         create_ctrl_sig_table,
         create_split_table, 
-        create_caption_table
+        create_caption_table, 
+        create_chunk_table
     ]:
         cur = cursor
         try: 

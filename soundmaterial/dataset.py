@@ -16,7 +16,8 @@ class Dataset(torch.utils.data.Dataset):
         audio_key: str = "path",
         aux_keys: list = [],
         transform=None, 
-        max_examples: int = None
+        max_examples: int = None,
+        use_chunk_table: bool = False 
     ):
         self.df = df
         self.transform = transform
@@ -27,6 +28,8 @@ class Dataset(torch.utils.data.Dataset):
         self.n_samples = n_samples
         self.num_channels = num_channels
         assert self.num_channels in [1, 2], f"multichannel not supported yet."
+
+        self.use_chunk_table = use_chunk_table
 
         # what's the total duration of the dataset in samples? 
         # we need this to sample random excerpts
@@ -47,7 +50,26 @@ class Dataset(torch.utils.data.Dataset):
         row = self.df.iloc[idx % len(self.df)]
         # check if the duration is in the row
         state = sn.random_state(idx)
-        if "duration" in row:
+        if "duration" and "offset" in row and self.use_chunk_table:
+            # print("using chunk table")
+            duration = row["duration"]
+            offset = row["offset"]
+            
+            # nudge a little back if we're too close to the end
+            if offset > 0 and (duration + offset) > row["total_duration"]:
+                offset = row["total_duration"] - duration
+                if offset < 0: # we tried
+                    offset = 0
+            
+            # assert chunk is big enough 
+            assert duration >= self.n_samples / self.sample_rate, f"chunk too small: {duration}"
+            sig = sn.read_from_file(
+                row[self.audio_key], 
+                duration=duration, 
+                offset=offset,
+            )
+            sig = sn.resample(sig, self.sample_rate)
+        elif "duration" in row:
             total_duration = row["duration"]
             duration = self.n_samples / self.sample_rate
             # sample a random offset 
@@ -98,12 +120,34 @@ class Dataset(torch.utils.data.Dataset):
     def collate(batch):
         return sn.collate(batch)
 
+
+class BalancedWeightedDataset:
+
+    def __init__(self, datasets, weights=None):
+        self.datasets = datasets
+        self.weights = weights
+        if self.weights is None:
+            self.weights = [1 for _ in range(len(datasets))]
+        
+        self.total_len = sum([len(d) for d in datasets])    
+    
+    def __len__(self):
+        return self.total_len
+
+    def __getitem__(self, idx):
+        dataset_idx = np.random.choice(len(self.datasets), p=self.weights)
+        return self.datasets[dataset_idx][idx % len(self.datasets[dataset_idx])]
+
+
 def train_test_split(df, test_size=0.1, seed=42):
+    print(f"splitting dataset with test_size={test_size}, seed={seed}")
     np.random.seed(seed)
     n = len(df)
     test_n = int(n * test_size)
     test_idxs = np.random.choice(n, test_n, replace=False)
-    train_idxs = np.array([i for i in range(n) if i not in test_idxs])
+    # train_idxs = np.array([i for i in range(n) if i not in test_idxs])
+    train_idxs = np.array(list(set(range(n)) - set(test_idxs)))
+    print(f"train: {len(train_idxs)}, test: {len(test_idxs)}")
     return df.iloc[train_idxs], df.iloc[test_idxs]
 
 if __name__ == "__main__":

@@ -128,6 +128,8 @@ def add_dataset(
     conn.execute("BEGIN TRANSACTION")
 
     # create the dataset table
+    # audio folder needs to be absolute
+    audio_folder = Path(audio_folder).resolve()
     if not sm.dataset_exists(conn, dataset_name):
         sm.insert_dataset(conn, sm.Dataset(name=dataset_name, root=audio_folder))
     
@@ -152,7 +154,11 @@ def add_dataset(
             num_channels=audio_data['channels'], 
             format=audio_data['format']
         )
-        sm.insert_audio_file(conn.cursor(), af)
+        # insert only if the audio file is not already in the database
+        if not sm.audio_file_exists(conn, af.path, dataset_id):
+            sm.insert_audio_file(conn.cursor(), af)
+        else:
+            pbar.set_description(f"audio file {audio_data['path']} already in database")
         total_length += audio_data['duration']
         pbar.set_description(f"dataset length: {pd.to_timedelta(total_length, unit='s')}")
     pbar.close()
