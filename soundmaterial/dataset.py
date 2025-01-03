@@ -40,6 +40,8 @@ class Dataset(torch.utils.data.Dataset):
             print(f"limiting to {max_examples} examples")
             self.total_excerpts = min(max_examples, self.total_excerpts)
 
+        self.seed = 0
+
 
     def __len__(self):
         return self.total_excerpts
@@ -49,10 +51,11 @@ class Dataset(torch.utils.data.Dataset):
         t0 = time.time()
         row = self.df.iloc[idx % len(self.df)]
         # check if the duration is in the row
-        state = sn.random_state(idx)
+        state = sn.random_state(idx + self.seed)
         if "duration" and "offset" in row and self.use_chunk_table:
             # print("using chunk table")
-            duration = row["duration"]
+            duration = self.n_samples / self.sample_rate
+            chunk_duration = row["duration"]
             offset = row["offset"]
             
             # nudge a little back if we're too close to the end
@@ -60,6 +63,15 @@ class Dataset(torch.utils.data.Dataset):
                 offset = row["total_duration"] - duration
                 if offset < 0: # we tried
                     offset = 0
+
+            # if the total_duration and offset allows it, nudge randomly
+            # up to half a chunk back or forward
+            offset_offset = state.uniform(-chunk_duration/2, chunk_duration/2)
+            offset += offset_offset
+            if offset < 0:
+                offset = 0
+            if offset + duration > row["total_duration"]:
+                offset = row["total_duration"] - duration
             
             # assert chunk is big enough 
             assert duration >= self.n_samples / self.sample_rate, f"chunk too small: {duration}"
@@ -87,7 +99,7 @@ class Dataset(torch.utils.data.Dataset):
                 row[self.audio_key], 
                 duration=self.n_samples/self.sample_rate, 
                 sample_rate=self.sample_rate, 
-                state=sn.random_state(idx)
+                state=sn.random_state(idx + self.seed)
             )
         # pad up to the desired duration
         if sig.num_samples < self.n_samples:
