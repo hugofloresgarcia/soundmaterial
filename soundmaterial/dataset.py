@@ -17,7 +17,8 @@ class Dataset(torch.utils.data.Dataset):
         aux_keys: list = [],
         transform=None, 
         max_examples: int = None,
-        use_chunk_table: bool = False 
+        use_chunk_table: bool = False, 
+        seed: int = 0
     ):
         self.df = df
         self.transform = transform
@@ -40,7 +41,7 @@ class Dataset(torch.utils.data.Dataset):
             print(f"limiting to {max_examples} examples")
             self.total_excerpts = min(max_examples, self.total_excerpts)
 
-        self.seed = 0
+        self.seed = seed
 
 
     def __len__(self):
