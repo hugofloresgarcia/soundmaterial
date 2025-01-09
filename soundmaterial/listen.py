@@ -4,8 +4,7 @@ import sqlite3
 import numpy as np
 import gradio as gr
 import pandas as pd
-from audiotools import AudioSignal
-
+import vampnet.signal as sn
 
 import soundmaterial as sm
 
@@ -16,9 +15,9 @@ args = parser.parse_args()
 db_path = args.db_file
 
 # open the db 
-def to_output(sig: AudioSignal):
-    wave = sig.to_mono().samples[0][0].numpy()
-    return sig.sample_rate, wave * np.iinfo(np.int16).max
+def to_output(sig: sn.Signal):
+    wave = sn.to_mono(sig).wav[0][0].numpy()
+    return sig.sr, wave * np.iinfo(np.int16).max
     
 
 def search_audio_by_filename(query):
@@ -33,8 +32,7 @@ def search_audio_by_filename(query):
 
     # return a random result
     audio_id, path = random.choice(results)
-
-    sig = AudioSignal.salient_excerpt(path, duration=10.0)
+    sig = sn.excerpt(path, duration=10.0)
 
     # get a dataframe with the rest of the columns
     df = pd.read_sql_query(

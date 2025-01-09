@@ -2,10 +2,10 @@
 a python library for examining (with your eyes and ears) large sound datasets with a playful curiosity 
 
 ## setup
-first, install audiotools
+first, install vampnet (TODO: need to fix this circular dependency by factoring out vampnet's signal utils)
 ```bash
-git clone  https://github.com/hugofloresgarcia/audiotools.git
-cd audiotools
+git clone -b gloop  https://github.com/hugofloresgarcia/vampnet.git 
+cd vampnet
 pip install -e .
 ```
 
