@@ -5,7 +5,7 @@ import numpy as np
 import pandas as pd
 
 import soundmaterial as sm
-import vampnet.signal as sn
+import vampnet.dsp.signal as sn
 
 class Dataset(torch.utils.data.Dataset):
     def __init__(self, 
