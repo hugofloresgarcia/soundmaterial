@@ -4,7 +4,7 @@ import sqlite3
 import numpy as np
 import gradio as gr
 import pandas as pd
-import vampnet.signal as sn
+import vampnet.dsp.signal as sn
 
 import soundmaterial as sm
 

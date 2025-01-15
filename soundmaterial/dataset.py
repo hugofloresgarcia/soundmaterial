@@ -152,16 +152,15 @@ class BalancedWeightedDataset:
         return self.datasets[dataset_idx][idx % len(self.datasets[dataset_idx])]
 
 
-def train_test_split(df, test_size=0.1, seed=42):
-    print(f"splitting dataset with test_size={test_size}, seed={seed}")
+def train_test_split(df, test_size=0.05, seed=42):
+    # get the unique set of audio files
+    # shuffle the data
+    audio_files = df["path"].unique()
     np.random.seed(seed)
-    n = len(df)
-    test_n = int(n * test_size)
-    test_idxs = np.random.choice(n, test_n, replace=False)
-    # train_idxs = np.array([i for i in range(n) if i not in test_idxs])
-    train_idxs = np.array(list(set(range(n)) - set(test_idxs)))
-    print(f"train: {len(train_idxs)}, test: {len(test_idxs)}")
-    return df.iloc[train_idxs], df.iloc[test_idxs]
+    test_files = np.random.choice(audio_files, int(test_size * len(audio_files)), replace=False)
+    test_idxs = df["path"].isin(test_files)
+    train_idxs = ~test_idxs
+    return df[train_idxs], df[test_idxs]
 
 if __name__ == "__main__":
 
