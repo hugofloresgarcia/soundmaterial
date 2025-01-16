@@ -9,10 +9,7 @@ import vampnet.dsp.signal as sn
 import soundmaterial as sm
 
 import argparse
-parser = argparse.ArgumentParser()
-parser.add_argument("db_file" , default="sm.db")
-args = parser.parse_args()
-db_path = args.db_file
+
 
 # open the db 
 def to_output(sig: sn.Signal):
@@ -60,5 +57,12 @@ with gr.Blocks() as demo:
         outputs=[filename, audio_result, df_result, num_results_found]
     )
 
-demo.queue()
-demo.launch()
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("db_file" , default="sm.db")
+    args = parser.parse_args()
+    db_path = args.db_file
+
+    demo.queue()
+    demo.launch()
