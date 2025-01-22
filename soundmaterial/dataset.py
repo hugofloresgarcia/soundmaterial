@@ -32,6 +32,11 @@ class Dataset(torch.utils.data.Dataset):
 
         self.use_chunk_table = use_chunk_table
 
+        if self.use_chunk_table and len(df) == 0:
+            raise ValueError("got an empty dataframe, use_chunk_table is true, did you forget to chunk the database?")
+        elif len(df) == 0:
+            raise ValueError("got an empty dataframe, did you forget to add audio files to the database?")
+
         # what's the total duration of the dataset in samples? 
         # we need this to sample random excerpts
         self.total_samples = df["duration"].sum() * sample_rate
