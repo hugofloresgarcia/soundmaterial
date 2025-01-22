@@ -5,9 +5,12 @@ import pandas as pd
 
 import soundmaterial as sm
 
-def summarize(db_file: str, query: str = None) -> sqlite3.Connection:
+def summarize(db_file: str, query: str = None, chunks: bool = False) -> sqlite3.Connection:
     if query is None:
-        query = "SELECT * FROM audio_file JOIN dataset ON audio_file.dataset_id = dataset.id"
+        if chunks:
+            query = "SELECT * FROM chunk JOIN audio_file as af ON chunk.audio_file_id = af.id JOIN dataset ON af.dataset_id = dataset.id"
+        else:
+            query = "SELECT * FROM audio_file JOIN dataset ON audio_file.dataset_id = dataset.id"
 
     conn = sm.connect(db_file)
     df = pd.read_sql_query(query, conn)
