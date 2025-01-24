@@ -14,10 +14,6 @@ DB_PATH = "clack.db"
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# TODO (lindsey): can we adapt this so that we can have
-# 1 plot per dataset? 
-# in the DataFrame (tbl), each row should have a dataset_id
-# load our embedding model
 clap_model = CLAP(version = '2023', use_cuda=True)
 
 # connect to the sm database
