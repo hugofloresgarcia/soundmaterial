@@ -1,4 +1,5 @@
 import random
+from typing import Optional
 
 import torch
 import numpy as np
@@ -14,16 +15,20 @@ class Dataset(torch.utils.data.Dataset):
         n_samples: int = 44100,
         num_channels: int = 1,
         audio_key: str = "path",
+        text_key: Optional[str] = None,
         aux_keys: list = [],
         transform=None, 
+        text_transform=None,
         max_examples: int = None,
         use_chunk_table: bool = False, 
         seed: int = 0
     ):
         self.df = df
         self.transform = transform
+        self.text_transform = text_transform
 
         self.audio_key = audio_key
+        self.text_key = text_key
         self.aux_keys = aux_keys
         self.sample_rate = sample_rate
         self.n_samples = n_samples
@@ -126,11 +131,38 @@ class Dataset(torch.utils.data.Dataset):
 
         if self.transform:
             sig = self.transform(sig)
-    
+
         out = {"sig": sig }
+
+        if self.text_key is not None:
+            if self.text_key == "path":
+                text = row["path"]
+                # clean up the path
+                text = text.split("/")[-1]
+                # remove file extension
+                text = text.split(".")[0]
+                # remove BBC
+                text = text.replace("BBC", "")
+                # remove numbers
+                text = ''.join([i for i in text if not i.isdigit()])
+                # remove underscores
+                text = text.replace("_", " ")
+                # remove dots
+                text = text.replace(".", " ")
+                # separate camelcase (a capital letter followed by a lowercase letter)
+                oldtext = str(text)
+                for i in range(1, len(oldtext)):
+                    if oldtext[i].isupper() and oldtext[i-1].islower():
+                        text = oldtext[:i] + " " + oldtext[i:]
+            else:
+                text = row[self.text_key]
+
+            if self.text_transform:
+                text = self.text_transform(text)
+            out["text"] = text
+    
         for key in self.aux_keys:
             out[key] = row[key]
-
 
         return out
 
