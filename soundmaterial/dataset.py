@@ -160,6 +160,8 @@ class Dataset(torch.utils.data.Dataset):
             if self.text_transform:
                 text = self.text_transform(text)
             out["text"] = text
+        else:
+            out["text"] = None
     
         for key in self.aux_keys:
             out[key] = row[key]
