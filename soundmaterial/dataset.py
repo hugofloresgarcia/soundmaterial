@@ -190,6 +190,13 @@ class BalancedWeightedDataset:
 
 
 def train_test_split(df, test_size=0.05, seed=42):
+    if df['path'].nunique() < 2:
+        print("~"*50)
+        print("WARNING: dataset has only one unique audio file!")
+        print("splitting the dataset will not work properly.")
+        print('returning the same dataset for both train and test')
+        print("~"*50)
+        return df, df
     # get the unique set of audio files
     # shuffle the data
     audio_files = df["path"].unique()
