@@ -6,10 +6,12 @@ from pathlib import Path
 
 # ~~~~ connect to the database ~~~~
 
-def connect(db_file: str) -> sqlite3.Connection:
+def connect(db_file: str, create=False) -> sqlite3.Connection:
     """
     connect to the database.
     """
+    if not Path(db_file).exists() and not create:
+        raise FileNotFoundError(f"Database file {db_file} does not exist.")
     # print(f"connecting to database at {db_file}")
     conn = sqlite3.connect(db_file)
 

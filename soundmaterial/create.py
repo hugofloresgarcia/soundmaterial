@@ -4,7 +4,7 @@ import sqlite3
 import soundmaterial as sm
 
 def create_db(db_file: str) -> sqlite3.Connection:
-    conn = sm.connect(db_file)
+    conn = sm.connect(db_file, create=True)
     sm.init(conn.cursor())
     conn.commit()
 

@@ -7,8 +7,6 @@ import warnings
 
 import argbind
 import tqdm
-import sqlite3
-import torchaudio
 import pandas as pd
 
 import soundmaterial as sm
