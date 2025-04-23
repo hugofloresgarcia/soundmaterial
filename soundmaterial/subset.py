@@ -61,7 +61,7 @@ def create_subset(
 
     # save a db file with the subset to the output folder
     subset_db = os.path.join(output_folder, "subset.db")
-    subset_conn = sm.connect(subset_db)
+    subset_conn = sm.connect(subset_db, create=True)
 
     subset.to_sql("audio_file", subset_conn, index=False)
 
