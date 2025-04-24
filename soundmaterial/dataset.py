@@ -17,6 +17,7 @@ class Dataset(torch.utils.data.Dataset):
         audio_key: str = "path",
         text_key: Optional[str] = None,
         aux_keys: list = [],
+        preprocess_transform=None,
         transform=None, 
         text_transform=None,
         max_examples: int = None,
@@ -24,6 +25,7 @@ class Dataset(torch.utils.data.Dataset):
         seed: int = 0
     ):
         self.df = df
+        self.preprocess_transform = preprocess_transform
         self.transform = transform
         self.text_transform = text_transform
 
@@ -128,6 +130,10 @@ class Dataset(torch.utils.data.Dataset):
                 sig.wav = sig.wav[:, :2]
         else:
             raise ValueError(f"Invalid number of channels: {self.num_channels}")
+
+
+        if self.preprocess_transform:
+            sig = self.preprocess_transform(sig.view())
 
         out = {"sig_dry": sig }
         
