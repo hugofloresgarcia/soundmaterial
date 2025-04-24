@@ -129,10 +129,13 @@ class Dataset(torch.utils.data.Dataset):
         else:
             raise ValueError(f"Invalid number of channels: {self.num_channels}")
 
+        out = {"sig_dry": sig }
+        
         if self.transform:
             sig = self.transform(sig)
 
-        out = {"sig": sig }
+        out["sig"] = sig
+
 
         if self.text_key is not None:
             if self.text_key == "path":
