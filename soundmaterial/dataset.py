@@ -132,7 +132,7 @@ class Dataset(torch.utils.data.Dataset):
         out = {"sig_dry": sig }
         
         if self.transform:
-            sig = self.transform(sig)
+            sig = self.transform(sig.view())
 
         out["sig"] = sig
 
