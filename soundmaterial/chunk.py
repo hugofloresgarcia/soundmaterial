@@ -14,15 +14,19 @@ from tqdm import tqdm
 
 def chunk(
         db_file: str, 
-        chunk_duration: float
+        chunk_duration: float, 
+        yes: bool = False
     ) -> sqlite3.Connection:
     conn = sm.connect(db_file)
 
     # confirm that the user wants to do this, as it will clear the existing
     # chunk table if any
-    print(f"WARNING: this will clear the existing chunk table. Continue? (y/n)")
-    if input() != "y":
-        return
+    if not yes:
+        print(f"WARNING: this will clear the existing chunk table. Continue? (y/n)")
+        if input() != "y":
+            return
+    else:
+        print(f"WARNING: this will clear the existing chunk table. Continuing...")
     
     # clear the existing chunk table
     conn.execute("DROP TABLE IF EXISTS chunk")
@@ -45,13 +49,14 @@ def chunk(
 
     total_chunks = conn.execute("SELECT COUNT(*) FROM chunk").fetchone()[0]
     print(f" created {total_chunks} chunks")
-    print(f"commit? (y/n)")
-    if input() == "y":
-        conn.commit()
-        print(f"committed")
+    if not yes:
+        print(f"WARNING: this will clear the existing chunk table. Continue? (y/n)")
+        if input() != "y":
+            conn.rollback()
+            return
     else:
-        conn.rollback()
-    
+        print(f"WARNING: this will clear the existing chunk table. Continuing...")
+
 if __name__ == "__main__":
     chunk = argbind.bind(chunk, without_prefix=True, positional=True)
 

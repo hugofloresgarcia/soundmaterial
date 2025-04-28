@@ -15,6 +15,14 @@ setup(
     install_requires=[
         "pandas", 
         "argbind",
-        "gradio"
+        "gradio", 
+        "torchaudio",
+        "einops", 
+        "julius", 
+        "soundfile", 
+        "flatten_dict", 
+        "scipy", 
+        "librosa", 
+        "sqlite_web"
     ],
 )

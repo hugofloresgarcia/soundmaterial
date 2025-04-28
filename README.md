@@ -21,6 +21,12 @@ pip install -e .
 ### usage example
 see `scripts/example.py` for an example. 
 
+### test stuff
+```bash
+pip install pytest
+python -m pytest
+```
+
 ### visualize CLAP embeddings
 visualize CLAP embeddings on a dataset. 
 see `scripts/embed.py`
@@ -69,4 +75,3 @@ python scripts/datasets/prosound.py
 ```
 
 you may have to modify the paths in the script to point to the correct locations of the prosound dataset on your machine.
-

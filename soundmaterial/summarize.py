@@ -5,7 +5,21 @@ import pandas as pd
 
 import soundmaterial as sm
 
-def summarize(db_file: str, query: str = None, chunks: bool = False) -> sqlite3.Connection:
+def summarize(conn, query: str = None, chunks: bool = False) -> sqlite3.Connection:
+    if query is None:
+        if chunks:
+            query = "SELECT * FROM chunk JOIN audio_file as af ON chunk.audio_file_id = af.id JOIN dataset ON af.dataset_id = dataset.id"
+        else:
+            query = "SELECT * FROM audio_file JOIN dataset ON audio_file.dataset_id = dataset.id"
+
+    df = pd.read_sql_query(query, conn)
+
+    print(f"Loaded {len(df)} rows from {conn}")
+    # show audio_file counts per dataset
+    print(df["name"].value_counts())
+    return df
+
+def summarize_db(db_file: str, query: str = None, chunks: bool = False) -> sqlite3.Connection:
     if query is None:
         if chunks:
             query = "SELECT * FROM chunk JOIN audio_file as af ON chunk.audio_file_id = af.id JOIN dataset ON af.dataset_id = dataset.id"
@@ -13,11 +27,7 @@ def summarize(db_file: str, query: str = None, chunks: bool = False) -> sqlite3.
             query = "SELECT * FROM audio_file JOIN dataset ON audio_file.dataset_id = dataset.id"
 
     conn = sm.connect(db_file)
-    df = pd.read_sql_query(query, conn)
-
-    print(f"Loaded {len(df)} rows from {db_file}")
-    # show audio_file counts per dataset
-    print(df["name"].value_counts())
+    summarize(conn, query, chunks)
     breakpoint()
 
     

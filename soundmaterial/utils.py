@@ -1,4 +1,6 @@
+import typing
 from typing import List
+import numbers 
 
 import numpy as np
 
@@ -106,3 +108,107 @@ def dim_reduce(
 
     return smart_plotly_export(fig, save_path)
 
+
+def random_state(seed: typing.Union[int, np.random.RandomState]):
+    """
+    Turn seed into a np.random.RandomState instance.
+
+    Parameters
+    ----------
+    seed : typing.Union[int, np.random.RandomState] or None
+        If seed is None, return the RandomState singleton used by np.random.
+        If seed is an int, return a new RandomState instance seeded with seed.
+        If seed is already a RandomState instance, return it.
+        Otherwise raise ValueError.
+
+    Returns
+    -------
+    np.random.RandomState
+        Random state object.
+
+    Raises
+    ------
+    ValueError
+        If seed is not valid, an error is thrown.
+    """
+    if seed is None or seed is np.random:
+        return np.random.mtrand._rand
+    elif isinstance(seed, (numbers.Integral, np.integer, int)):
+        return np.random.RandomState(seed)
+    elif isinstance(seed, np.random.RandomState):
+        return seed
+    else:
+        raise ValueError(
+            "%r cannot be used to seed a numpy.random.RandomState" " instance" % seed
+        )
+
+
+def seed(random_seed, set_cudnn=False):
+    """
+    Seeds all random states with the same random seed
+    for reproducibility. Seeds ``numpy``, ``random`` and ``torch``
+    random generators.
+    For full reproducibility, two further options must be set
+    according to the torch documentation:
+    https://pytorch.org/docs/stable/notes/randomness.html
+    To do this, ``set_cudnn`` must be True. It defaults to
+    False, since setting it to True results in a performance
+    hit.
+
+    Args:
+        random_seed (int): integer corresponding to random seed to
+        use.
+        set_cudnn (bool): Whether or not to set cudnn into determinstic
+        mode and off of benchmark mode. Defaults to False.
+    """
+
+    torch.manual_seed(random_seed)
+    np.random.seed(random_seed)
+    random.seed(random_seed)
+
+    if set_cudnn:
+        torch.backends.cudnn.deterministic = True
+        torch.backends.cudnn.benchmark = False
+
+
+def sample_from_dist(dist_tuple: tuple, state: np.random.RandomState = None):
+    """Samples from a distribution defined by a tuple. The first
+    item in the tuple is the distribution type, and the rest of the
+    items are arguments to that distribution. The distribution function
+    is gotten from the ``np.random.RandomState`` object.
+
+    Parameters
+    ----------
+    dist_tuple : tuple
+        Distribution tuple
+    state : np.random.RandomState, optional
+        Random state, or seed to use, by default None
+
+    Returns
+    -------
+    typing.Union[float, int, str]
+        Draw from the distribution.
+
+    Examples
+    --------
+    Sample from a uniform distribution:
+
+    >>> dist_tuple = ("uniform", 0, 1)
+    >>> sample_from_dist(dist_tuple)
+
+    Sample from a constant distribution:
+
+    >>> dist_tuple = ("const", 0)
+    >>> sample_from_dist(dist_tuple)
+
+    Sample from a normal distribution:
+
+    >>> dist_tuple = ("normal", 0, 0.5)
+    >>> sample_from_dist(dist_tuple)
+
+    """
+    if dist_tuple[0] == "const":
+        return dist_tuple[1]
+    state = random_state(state)
+    dist_fn = getattr(state, dist_tuple[0])
+    return dist_fn(*dist_tuple[1:])

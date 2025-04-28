@@ -9,10 +9,13 @@ import pandas as pd
 import soundmaterial as sm
 
 # the path to our database
-db_path = "/media/pancho/sm.db"
+db_path = "sm.db"
 
-# connect to our database
-conn = sm.connect(db_path)
+# create a new database
+conn = sm.create.create_db(db_path)
+
+# add a dataset to the database
+sm.add.add_dataset(db_path, "./assets/guitar-abstract", "guitar-abstract")
 
 # find all the wav files
 query = "SELECT * FROM audio_file WHERE format = 'wav'"

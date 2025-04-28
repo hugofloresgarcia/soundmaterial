@@ -9,7 +9,7 @@ import pandas as pd
 import soundmaterial as sm
 
 # the path to our database
-db_path = "/home/hugo/soup/sm.db"
+db_path = "sm.db"
 
 # connect to our database
 conn = sm.connect(db_path)
