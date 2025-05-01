@@ -23,6 +23,7 @@ setup(
         "flatten_dict", 
         "scipy", 
         "librosa", 
-        "sqlite_web"
+        "sqlite_web", 
+        "pyloudnorm
     ],
 )
