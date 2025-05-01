@@ -24,6 +24,6 @@ setup(
         "scipy", 
         "librosa", 
         "sqlite_web", 
-        "pyloudnorm
+        "pyloudnorm",
     ],
 )
