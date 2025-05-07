@@ -49,3 +49,14 @@ def test_soundmaterial():
     assert item is not None
     assert isinstance(item["sig"], Signal)
     assert isinstance(item["sig_dry"], Signal)
+    assert isinstance(item["sig"].metadata, dict)
+    assert "path" in item["sig"].metadata 
+
+    # make splits
+    from soundmaterial.train_test_split import split
+    split("test.db", test_size=0.2, yes=True)
+
+    # get the splits
+    cursor.execute("SELECT * FROM split")
+    splits = cursor.fetchall()
+    assert len(splits) > 0

@@ -341,6 +341,41 @@ def chunk_exists(cur, audio_file_id: int, offset: float) -> bool:
         )
     """).fetchone()[0]
 
+@dataclass
+class Split:
+    audio_file_id: int
+    split: str
+
+def create_split_table(cur):
+    cur.execute(
+        """
+        CREATE TABLE split (
+            id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+            audio_file_id INTEGER NOT NULL,
+            split STRING NOT NULL,
+            FOREIGN KEY (audio_file_id) REFERENCES audio_file(id),
+            UNIQUE (audio_file_id, split)
+        )
+        """
+    )
+
+def insert_split(cur, split: Split):
+    cur.execute(
+        f"""
+        INSERT INTO split ( audio_file_id, split ) 
+        VALUES ({split.audio_file_id}, '{split.split}')
+        """
+    )
+
+def get_split(cur, audio_file_id: int) -> pd.DataFrame:
+    return cur.execute(f"""
+        SELECT *
+        FROM split
+        WHERE audio_file_id = {audio_file_id}
+    """).fetchall()
+
+
+
 def init(cursor: sqlite3.Cursor):
     for fn in [
         create_dataset_table,

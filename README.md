@@ -39,19 +39,32 @@ pip install plotly transformers umap-learn scikit-learn torchlibrosa
 
 ## cli
 
+### new database
 create a new database called `sm.db`
 ```bash
 python -m soundmaterial.create ./sm.db
 ```
 
+### add audio files
 add a folder of sounds to the database
 ```bash
 python -m soundmaterial.add ./sm.db /path/to/sounds
 ```
 
+### listen to samples from the dataset
 open a web interface and search for sounds by filename
 ```bash
 python -m soundmaterial.listen ./sm.db
+```
+
+chunk the audio files into 5 second chunks (in a new table called `chunk`)
+```bash
+python -m soundmaterial.chunk ./sm.db 5.0 # duration in seconds
+```
+
+create a train test split, split by audio files
+```bash
+python -m soundmaterial.split ./sm.db  --test_size 0.2 --query "SELECT * FROM audio_file" 
 ```
 
 create a subset (copy) of the audio files with an SQL query (use `--symlinks` to create symlinks instead of copying files)

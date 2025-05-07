@@ -3,7 +3,7 @@ import math
 from pathlib import Path
 import warnings
 import subprocess
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 import numbers
 import time
 
@@ -31,6 +31,8 @@ class Signal:
     wav: Tensor
     sr: int
 
+    metadata: dict = field(default_factory=dict)
+
     def __post_init__(self):
         assert self.wav.ndim == 3, "Signal must have shape (batch, channels, samples)"
         assert self.wav.shape[-1] > self.wav.shape[-2], "Signal must have more samples than channels! this is just a check. not sure if we'll run into any cases where this is not true."
@@ -52,13 +54,13 @@ class Signal:
         return self.wav.shape[-1]
 
     def to(self, device: str):
-        return Signal(self.wav.to(device), self.sr)
+        return Signal(self.wav.to(device), self.sr, self.metadata)
     
     def cpu(self):
-        return Signal(self.wav.cpu(), self.sr)
+        return Signal(self.wav.cpu(), self.sr, self.metadata)
 
     def view(self,):
-        return Signal(self.wav, self.sr)
+        return Signal(self.wav, self.sr, self.metadata)
 
 # ~ signal creation utils ~
 def batch(
@@ -191,7 +193,7 @@ def median_filter_1d(x: Tensor, sizes: Tensor) -> Tensor:
 
 def pitch_shift(sig: Signal, semitones: int) -> Signal:
     tfm = T.PitchShift(sample_rate=sig.sr, n_steps=semitones)
-    return Signal(tfm(sig.wav), sig.sr)
+    return Signal(tfm(sig.wav), sig.sr, sig.metadata)
 
 def low_pass(sig: Signal, cutoff: float, zeros: int = 51) -> Signal:
     cutoff = ensure_tensor(cutoff, 2, sig.wav.batch_size).to(sig.wav.device)
@@ -202,7 +204,7 @@ def low_pass(sig: Signal, cutoff: float, zeros: int = 51) -> Signal:
         lp_filter = julius.LowPassFilter(c.cpu(), zeros=zeros).to(sig.wav.device)
         filtered[i] = lp_filter(sig.wav[i])
     
-    return Signal(filtered, sig.sr)
+    return Signal(filtered, sig.sr, sig.metadata)
 
 def high_pass(sig: Signal, cutoff: float, zeros: int = 51) -> Signal:
     cutoff = ensure_tensor(cutoff, 2, sig.wav.batch_size).to(sig.wav.device)
@@ -213,12 +215,12 @@ def high_pass(sig: Signal, cutoff: float, zeros: int = 51) -> Signal:
         hp_filter = julius.HighPassFilter(c.cpu(), zeros=zeros).to(sig.wav.device)
         filtered[i] = hp_filter(sig.wav[i])
     
-    return Signal(filtered, sig.sr)
+    return Signal(filtered, sig.sr, sig.metadata)
 
 def to_mono(sig: Signal) -> Signal:
     """Converts a stereo signal to mono by averaging the channels."""
     wav = sig.wav.mean(dim=-2, keepdim=True)
-    return Signal(wav, sig.sr)
+    return Signal(wav, sig.sr, sig.metadata)
 
 def normalize(sig: Signal, db: Tensor | float = -24.0) -> Signal:
     """Normalizes the signal's volume to the specified db, in LUFS.
@@ -235,7 +237,7 @@ def normalize(sig: Signal, db: Tensor | float = -24.0) -> Signal:
     gain = torch.exp(gain * GAIN_FACTOR)
 
     wav = sig.wav * gain[:, None, None]
-    return Signal(wav, sig.sr)
+    return Signal(wav, sig.sr, sig.metadata)
 
 # ~ analyze ~
 def loudness(
@@ -317,7 +319,7 @@ def cut_to_hop_length(wav: Tensor, hop_length: int) -> torch.Tensor:
 def trim_to_s(sig: Signal, duration: float) -> Tensor:
     """ Trims a signal to a specified duration in seconds."""
     length = int(duration * sig.sr)
-    return Signal(sig.wav[..., :length], sig.sr)
+    return Signal(sig.wav[..., :length], sig.sr, sig.metadata)
 
 def concat(signals: list[Signal]) -> Signal:
     """Concatenates a list of signals along the time axis."""
@@ -326,7 +328,7 @@ def concat(signals: list[Signal]) -> Signal:
     assert all([x.num_channels == first_sig.num_channels for x in signals]), "All signals must have the same number of channels"
     assert all([x.batch_size == first_sig.batch_size for x in signals]), "All signals must have the same batch size"
     wav = torch.cat([x.wav for x in signals], dim=-1)
-    return Signal(wav, signals[0].sr)
+    return Signal(wav, signals[0].sr, sig.metadata)
 
 def ensure_tensor(
     x: np.ndarray | torch.Tensor | float | int,
@@ -552,11 +554,11 @@ def read_from_file(
         if data.ndim < 3:
             data = data.unsqueeze(0)
 
-        return Signal(data.to(device), sample_rate)
+        return Signal(data.to(device), sample_rate, {"path": path, "offset": offset, "duration": duration})
 
 def resample(sig: Signal, sample_rate: int) -> Signal:
     resampler = T.Resample(orig_freq=sig.sr, new_freq=sample_rate)
-    return Signal(resampler(sig.wav), sample_rate)
+    return Signal(resampler(sig.wav), sample_rate, sig.metadata)
 
 def excerpt(
     audio_path: str | Path,
