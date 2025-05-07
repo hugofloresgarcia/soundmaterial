@@ -108,6 +108,7 @@ def batch(
     batched_signal = Signal(
         audio_data,
         sr=audio_signals[0].sr,
+        # metadata=audio_signals[0].metadata,
     )
     return batched_signal
 

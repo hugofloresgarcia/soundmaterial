@@ -93,6 +93,7 @@ class Dataset(torch.utils.data.Dataset):
                 duration=duration, 
                 offset=offset,
             )
+            # sig.metadata[]
             sig = sn.resample(sig, self.sample_rate)
         elif "duration" in row:
             total_duration = row["duration"]
